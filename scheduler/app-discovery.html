@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Discovery - Advanced Scheduler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📡 Discover Striim Applications</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="refresh-btn">🔄 Refresh</button>
+                <button class="btn btn-primary" id="add-selected-btn" disabled>
+                    Add Selected to Schedule
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-tab">📋 Schedules</a>
+            <a href="global-settings.html" class="nav-tab">⚙️ Global Settings</a>
+            <a href="app-discovery.html" class="nav-tab active">📡 App Discovery</a>
+        </nav>
+
+        <!-- Connection Status -->
+        <div class="alert" id="connection-status">
+            <span class="spinner"></span>
+            <span>Connecting to Striim...</span>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Filter by Namespace</label>
+                    <select class="form-control" id="filter-namespace">
+                        <option value="">All Namespaces</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Filter by Status</label>
+                    <select class="form-control" id="filter-status">
+                        <option value="">All Statuses</option>
+                        <option value="CREATED">Created</option>
+                        <option value="DEPLOYED">Deployed</option>
+                        <option value="RUNNING">Running</option>
+                        <option value="QUIESCED">Quiesced</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Search</label>
+                    <input type="text" class="form-control" id="filter-search"
+                           placeholder="Search by name...">
+                </div>
+            </div>
+        </div>
+
+        <!-- App List -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Available Applications</h2>
+                <span class="text-muted text-sm" id="app-count">Loading...</span>
+            </div>
+            <div id="app-table-container">
+                <div class="empty-state">
+                    <div class="spinner" style="margin: 0 auto 16px;"></div>
+                    <p>Loading applications from Striim...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Info -->
+        <div class="card">
+            <div class="card-header"><h2>API Integration</h2></div>
+            <pre class="code-preview">// Apps fetched from Striim REST API
+GET /api/v2/applications
+Headers: { "STRIIM-TOKEN": "session-token-from-cookie" }
+
+// Response structure:
+{
+  "applications": [
+    {
+      "id": "uuid",
+      "name": "MyApp",
+      "nsName": "prod",
+      "flowStatus": "RUNNING",
+      "metaInfoStatus": "VALID",
+      "ctime": 1705334400000
+    }
+  ]
+}</pre>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/api.js"></script>
+    <script src="utils/config.js"></script>
+    <script src="utils/validation.js"></script>
+    <script src="app-discovery.js"></script>
+</body>
+</html>

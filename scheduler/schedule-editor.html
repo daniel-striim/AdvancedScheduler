@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Editor - Advanced Scheduler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>
+                <a href="index.html" class="nav-link">← Back</a>
+                <span id="page-title">New Schedule</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                <button class="btn btn-success" id="save-btn">💾 Save Schedule</button>
+            </div>
+        </header>
+
+        <!-- Application Selection -->
+        <div class="card">
+            <div class="card-header"><h2>Application Selection</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Application Name *</label>
+                    <input type="text" class="form-control" id="app-name" 
+                           placeholder="e.g., prod.MyApplication or prod.IBR*">
+                    <p class="form-hint">Enter app name or use * for wildcard patterns</p>
+                </div>
+                <div class="form-group">
+                    <label>Or Select from Striim</label>
+                    <select class="form-control" id="app-select">
+                        <option value="">-- Select an application --</option>
+                    </select>
+                    <p class="form-hint">Apps loaded from Striim API</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority, Group, Tags -->
+        <div class="card">
+            <div class="card-header"><h2>Priority & Grouping</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Group</label>
+                    <select class="form-control" id="schedule-group">
+                        <option value="">-- No Group --</option>
+                        <option value="critical">🔴 Critical</option>
+                        <option value="high">🟠 High</option>
+                        <option value="normal">🔵 Normal</option>
+                        <option value="low">⚪ Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority (0-100)</label>
+                    <input type="number" class="form-control" id="schedule-priority" 
+                           value="50" min="0" max="100">
+                    <p class="form-hint">Higher priority apps start first when limited</p>
+                </div>
+                <div class="form-group">
+                    <label>Enabled</label>
+                    <div class="toggle active" id="schedule-enabled"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tags</label>
+                    <input type="text" class="form-control" id="tags-input" 
+                           placeholder="Press Enter to add tag">
+                    <div class="mt-2" id="tags-container"></div>
+                </div>
+                <div class="form-group">
+                    <label>Timezone (override global)</label>
+                    <select class="form-control" id="schedule-timezone">
+                        <option value="">Use Global Default</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Type Tabs -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Schedule Type</h2>
+                <div class="flex gap-2">
+                    <button class="btn btn-sm" id="tab-windows">
+                        Time Windows
+                    </button>
+                    <button class="btn btn-sm btn-secondary" id="tab-cron">
+                        Cron Expression
+                    </button>
+                </div>
+            </div>
+
+            <!-- Time Windows Section -->
+            <div id="windows-section">
+                <div class="alert alert-info mb-4">
+                    💡 Time windows define when the app is ALLOWED to run. Outside these windows, the app will be stopped.
+                </div>
+                <div id="windows-container"></div>
+                <button class="btn btn-secondary mt-4" id="add-window-btn">+ Add Time Window</button>
+            </div>
+
+            <!-- Cron Section -->
+            <div id="cron-section" class="hidden">
+                <div class="alert alert-info mb-4">
+                    💡 Cron expressions trigger the app at specific times. Use runDuration to control how long it runs.
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cron Expression *</label>
+                        <input type="text" class="form-control" id="cron-expression" 
+                               placeholder="e.g., 0 2 * * * (daily at 2am)">
+                        <p class="form-hint">Standard 5-field cron: minute hour day month weekday</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Run Duration</label>
+                        <input type="text" class="form-control" id="run-duration" 
+                               placeholder="e.g., 45m, 2h, 1h30m">
+                        <p class="form-hint">How long the app should run after trigger</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="card">
+            <div class="card-header"><h2>Dependencies & Exclusions</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Depends On (must be RUNNING)</label>
+                    <select class="form-control" id="depends-on" multiple style="height: 100px;"></select>
+                    <p class="form-hint">These apps must be running before this app starts</p>
+                </div>
+                <div class="form-group">
+                    <label>Depends On Completed</label>
+                    <select class="form-control" id="depends-on-completed" multiple style="height: 100px;"></select>
+                    <p class="form-hint">These apps must finish (COMPLETED) first</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Exclusive With (cannot run simultaneously)</label>
+                <select class="form-control" id="exclusive-with" multiple style="height: 80px;"></select>
+                <p class="form-hint">This app won't start if any of these are running</p>
+            </div>
+        </div>
+
+        <!-- End Behavior -->
+        <div class="card">
+            <div class="card-header"><h2>End Behavior</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>End Action</label>
+                    <select class="form-control" id="end-action">
+                        <option value="STOP">STOP - Quiesce then stop (default)</option>
+                        <option value="QUIESCE">QUIESCE - Only quiesce, don't stop</option>
+                        <option value="UNDEPLOY">UNDEPLOY - Stop then undeploy</option>
+                        <option value="STOP_UNDEPLOY">STOP_UNDEPLOY - Quiesce, stop, undeploy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Run Until Complete</label>
+                    <label class="flex items-center gap-2 mt-2">
+                        <input type="checkbox" id="run-until-complete">
+                        <span>Don't stop at end time - let app run to completion</span>
+                    </label>
+                    <p class="form-hint">Ignores end time; app runs until it naturally completes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/api.js"></script>
+    <script src="utils/config.js"></script>
+    <script src="utils/validation.js"></script>
+    <script src="schedule-editor.js"></script>
+</body>
+</html>

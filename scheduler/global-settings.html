@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Settings - Advanced Scheduler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>⚙️ Global Settings</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="reset-defaults-btn">Reset to Defaults</button>
+                <button class="btn btn-success" id="save-settings-btn">💾 Save Settings</button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-tab">📋 Schedules</a>
+            <a href="global-settings.html" class="nav-tab active">⚙️ Global Settings</a>
+            <a href="app-discovery.html" class="nav-tab">📡 App Discovery</a>
+        </nav>
+
+        <!-- Concurrency Settings -->
+        <div class="card">
+            <div class="card-header"><h2>Concurrency Limits</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Max Concurrent Apps (Global)</label>
+                    <input type="number" class="form-control" id="max-concurrent" value="10" min="1">
+                    <p class="form-hint">Maximum apps running at the same time</p>
+                </div>
+                <div class="form-group">
+                    <label>Default Stagger (seconds)</label>
+                    <input type="number" class="form-control" id="default-stagger" value="30" min="0">
+                    <p class="form-hint">Delay between starting consecutive apps</p>
+                </div>
+                <div class="form-group">
+                    <label>Default Timezone</label>
+                    <select class="form-control" id="default-timezone"></select>
+                </div>
+            </div>
+
+            <h3 class="mt-4 mb-2">Max Concurrent Per Group</h3>
+            <div class="form-row" id="group-limits">
+                <!-- Dynamic group limits -->
+            </div>
+            <button class="btn btn-secondary btn-sm mt-2" id="add-group-limit-btn">+ Add Group Limit</button>
+        </div>
+
+        <!-- Blackout Windows -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Blackout Windows</h2>
+                <button class="btn btn-secondary btn-sm" id="add-blackout-btn">+ Add Blackout</button>
+            </div>
+            <div class="alert alert-warning mb-4">
+                ⚠️ During blackout windows, NO scheduled apps will start. Running apps will be stopped.
+            </div>
+            <div id="blackout-container"></div>
+        </div>
+
+        <!-- Retry Policy -->
+        <div class="card">
+            <div class="card-header"><h2>Retry Policy</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Max Retries</label>
+                    <input type="number" class="form-control" id="max-retries" value="3" min="0">
+                    <p class="form-hint">Number of retry attempts on failure</p>
+                </div>
+                <div class="form-group">
+                    <label>Retry Delay (seconds)</label>
+                    <input type="number" class="form-control" id="retry-delay" value="60" min="0">
+                    <p class="form-hint">Initial delay before first retry</p>
+                </div>
+                <div class="form-group">
+                    <label>Backoff Multiplier</label>
+                    <input type="number" class="form-control" id="backoff-multiplier" 
+                           value="2.0" step="0.1" min="1">
+                    <p class="form-hint">Multiply delay after each retry</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Preview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Configuration Preview</h2>
+                <button class="btn btn-secondary btn-sm" id="copy-global-config-btn">📋 Copy JSON</button>
+            </div>
+            <pre class="code-preview" id="config-preview"></pre>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/api.js"></script>
+    <script src="utils/config.js"></script>
+    <script src="utils/validation.js"></script>
+    <script src="global-settings.js"></script>
+</body>
+</html>

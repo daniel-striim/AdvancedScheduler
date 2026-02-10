@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdvancedScheduler: Schedule Configuration Visualizer and Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h1>🕐 AdvancedScheduler</h1>
+                <p class="header-subtitle">Schedule Configuration Visualizer and Generator</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="load-config-btn">
+                    📁 Load Config
+                </button>
+                <button class="btn btn-secondary" id="export-config-btn">
+                    💾 Export Config
+                </button>
+                <button class="btn btn-accent" id="auto-balance-btn">
+                    ⚖️ Auto-Balance
+                </button>
+                <a href="schedule-editor.html" class="btn btn-primary">+ Add Schedule</a>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-tab active">📋 Schedules</a>
+            <a href="global-settings.html" class="nav-tab">⚙️ Global Settings</a>
+            <a href="app-discovery.html" class="nav-tab">📡 App Discovery</a>
+        </nav>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">Total Schedules</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-success" id="stat-enabled">0</div>
+                <div class="stat-label">Enabled</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-muted" id="stat-disabled">0</div>
+                <div class="stat-label">Disabled</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--striim-accent);" id="stat-groups">0</div>
+                <div class="stat-label">Groups</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Filter by Group</label>
+                    <select class="form-control" id="filter-group">
+                        <option value="">All Groups</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Filter by Tag</label>
+                    <select class="form-control" id="filter-tag">
+                        <option value="">All Tags</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Search</label>
+                    <input type="text" class="form-control" id="filter-search"
+                           placeholder="Search by app name...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Application Schedules</h2>
+                <span class="text-muted text-sm" id="schedule-count">0 schedules</span>
+            </div>
+            <div id="schedule-table-container">
+                <!-- Table will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Timeline Preview -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Today's Timeline</h2>
+                <span class="text-muted text-sm" id="current-time"></span>
+            </div>
+            <div class="timeline" id="timeline">
+                <div class="timeline-hours">
+                    <span>00:00</span>
+                    <span>06:00</span>
+                    <span>12:00</span>
+                    <span>18:00</span>
+                    <span>24:00</span>
+                </div>
+            </div>
+            <div class="flex gap-4 mt-4 text-sm">
+                <span><span style="color: var(--striim-primary);">■</span> Run Windows</span>
+                <span><span style="color: var(--striim-danger);">■</span> Blackout Periods</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Config Modal -->
+    <div class="modal-overlay" id="load-config-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Load Configuration</h3>
+                <button class="btn btn-icon btn-secondary" id="load-config-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Paste JSON Configuration</label>
+                    <textarea class="form-control" id="load-config-input" rows="12"
+                              placeholder='Paste your scheduler JSON config here...
+Example:
+{
+  "global": { ... },
+  "schedules": [ ... ]
+}
+
+Or simple array format:
+[
+  {"app": "prod.MyApp", "windows": [{"start": "02:00"}]}
+]'></textarea>
+                </div>
+                <div class="alert alert-info">
+                    💡 Supports both full config format and simple array format
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="load-config-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="load-config-submit-btn">Load Config</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Config Modal -->
+    <div class="modal-overlay" id="export-config-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Export Configuration</h3>
+                <button class="btn btn-icon btn-secondary" id="export-config-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Configuration JSON</label>
+                    <pre class="code-preview" id="export-config-output"></pre>
+                </div>
+                <div class="alert alert-info">
+                    💡 Copy this JSON and save it to <code>$STRIIM_HOME/conf/scheduler-config.json</code>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="export-config-close-btn2">Close</button>
+                <button class="btn btn-secondary" id="download-config-btn">⬇️ Download</button>
+                <button class="btn btn-primary" id="copy-config-btn">📋 Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-confirm-modal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Delete Schedule</h3>
+                <button class="btn btn-icon btn-secondary" id="delete-confirm-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the schedule for <strong id="delete-app-name"></strong>?</p>
+                <p class="text-muted text-sm mt-2">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="delete-confirm-cancel-btn">Cancel</button>
+                <button class="btn btn-danger" id="delete-confirm-submit-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-Balance Modal -->
+    <div class="modal-overlay" id="auto-balance-modal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>⚖️ Auto-Balance Schedules</h3>
+                <button class="btn btn-icon btn-secondary" id="auto-balance-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Strategy Selection -->
+                <div class="form-group">
+                    <label>Balancing Strategy</label>
+                    <select class="form-control" id="balance-strategy">
+                        <option value="even-spread">Even Spread (Round-robin across time slots)</option>
+                        <option value="staggered-start">Staggered Start (Same window, offset start times)</option>
+                        <option value="multi-daily">Multiple Times Daily (Run N times/day, staggered, no end time)</option>
+                    </select>
+                    <p class="form-hint" id="strategy-hint">Distributes apps evenly across the time window</p>
+                </div>
+
+                <!-- App Selection -->
+                <div class="form-group">
+                    <label>Apps to Balance</label>
+                    <div class="flex gap-2 mb-2">
+                        <button class="btn btn-sm btn-secondary" id="select-all-apps-btn">Select All</button>
+                        <button class="btn btn-sm btn-secondary" id="select-none-apps-btn">Select None</button>
+                        <span class="text-muted text-sm" style="margin-left: auto;" id="selected-apps-count">0 selected</span>
+                    </div>
+                    <div class="app-select-list" id="balance-app-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Time Window Configuration -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <h4 class="mb-3">⏰ Time Window</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="time" class="form-control" id="balance-start-time" value="20:00">
+                        </div>
+                        <div class="form-group">
+                            <label>End Time (optional)</label>
+                            <input type="time" class="form-control" id="balance-end-time" value="08:00">
+                            <p class="form-hint">Leave empty for "run until complete"</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Window Duration</label>
+                            <select class="form-control" id="balance-window-duration">
+                                <option value="1">1 hour</option>
+                                <option value="2">2 hours</option>
+                                <option value="4" selected>4 hours</option>
+                                <option value="6">6 hours</option>
+                                <option value="8">8 hours</option>
+                                <option value="12">12 hours</option>
+                            </select>
+                            <p class="form-hint">How long each app's window should be</p>
+                        </div>
+                    </div>
+
+                    <!-- Staggered Start Options (shown when strategy is staggered-start) -->
+                    <div class="form-row" id="stagger-options" style="display: none;">
+                        <div class="form-group">
+                            <label>Stagger Interval</label>
+                            <select class="form-control" id="balance-stagger-interval">
+                                <option value="5">5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="60">1 hour</option>
+                            </select>
+                            <p class="form-hint">Time between each app's start</p>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Daily Options (shown when strategy is multi-daily) -->
+                    <div id="multi-daily-options" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Times Per Day</label>
+                                <select class="form-control" id="multi-daily-times">
+                                    <option value="2">2 times/day (every 12 hours)</option>
+                                    <option value="3">3 times/day (every 8 hours)</option>
+                                    <option value="4" selected>4 times/day (every 6 hours)</option>
+                                    <option value="6">6 times/day (every 4 hours)</option>
+                                    <option value="8">8 times/day (every 3 hours)</option>
+                                    <option value="12">12 times/day (every 2 hours)</option>
+                                    <option value="24">24 times/day (every hour)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Concurrent Apps</label>
+                                <select class="form-control" id="multi-daily-max-concurrent">
+                                    <option value="1" selected>1 (no overlap)</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <p class="form-hint">Max apps running at same time</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First App Start Time</label>
+                                <input type="time" class="form-control" id="multi-daily-first-start" value="00:00">
+                                <p class="form-hint">When the first app starts each cycle</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Stagger Between Apps</label>
+                                <select class="form-control" id="multi-daily-stagger">
+                                    <option value="auto">Auto (based on apps & concurrency)</option>
+                                    <option value="15">15 minutes</option>
+                                    <option value="30">30 minutes</option>
+                                    <option value="60">1 hour</option>
+                                    <option value="120">2 hours</option>
+                                </select>
+                                <p class="form-hint">Time offset between app starts</p>
+                            </div>
+                        </div>
+                        <div class="alert alert-info" id="multi-daily-summary" style="margin-top: 12px;">
+                            <strong>📊 Smart Defaults:</strong> <span id="multi-daily-summary-text">Select apps to see recommendations</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Days of Week -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <h4 class="mb-3">📅 Days of Week</h4>
+                    <div class="checkbox-group" id="balance-days">
+                        <label><input type="checkbox" value="MONDAY" checked> Mon</label>
+                        <label><input type="checkbox" value="TUESDAY" checked> Tue</label>
+                        <label><input type="checkbox" value="WEDNESDAY" checked> Wed</label>
+                        <label><input type="checkbox" value="THURSDAY" checked> Thu</label>
+                        <label><input type="checkbox" value="FRIDAY" checked> Fri</label>
+                        <label><input type="checkbox" value="SATURDAY" checked> Sat</label>
+                        <label><input type="checkbox" value="SUNDAY" checked> Sun</label>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn btn-sm btn-secondary" id="select-weekdays-btn">Weekdays</button>
+                        <button class="btn btn-sm btn-secondary" id="select-weekend-btn">Weekend</button>
+                        <button class="btn btn-sm btn-secondary" id="select-all-days-btn">All Days</button>
+                    </div>
+                </div>
+
+                <!-- Business Hours (Optional) -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <h4 class="mb-3">🏢 Business Hours (Avoid)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><input type="checkbox" id="avoid-business-hours"> Avoid business hours</label>
+                        </div>
+                        <div class="form-group" id="business-hours-config" style="display: none;">
+                            <label>Busy Period</label>
+                            <div class="flex gap-2">
+                                <input type="time" class="form-control" id="business-start" value="09:00">
+                                <span class="text-muted">to</span>
+                                <input type="time" class="form-control" id="business-end" value="17:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization Settings (for run-until-complete) -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <h4 class="mb-3">📊 Heatmap Visualization</h4>
+                    <p class="text-muted text-sm mb-3">For apps without end times, estimate impact decay for the heatmap</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Expected Duration (hours)</label>
+                            <input type="number" class="form-control" id="expected-duration" value="4" min="1" max="24">
+                            <p class="form-hint">Typical runtime for visualization</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Decay Curve</label>
+                            <select class="form-control" id="decay-curve">
+                                <option value="linear">Linear (steady decline)</option>
+                                <option value="exponential" selected>Exponential (fast initial drop)</option>
+                                <option value="step">Step (50% at halfway)</option>
+                            </select>
+                            <p class="form-hint">How impact fades over time</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Schedules -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <h4 class="mb-3">📝 Existing Schedules</h4>
+                    <div class="form-group">
+                        <label>How to handle existing schedules for selected apps?</label>
+                        <select class="form-control" id="existing-schedule-action">
+                            <option value="replace">Replace existing schedules</option>
+                            <option value="skip">Skip apps with existing schedules</option>
+                            <option value="merge">Merge (add new windows to existing)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="card" style="background: var(--striim-bg); margin-top: 16px;">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4>👁️ Preview</h4>
+                        <button class="btn btn-sm btn-secondary" id="generate-preview-btn">Generate Preview</button>
+                    </div>
+                    <div id="balance-preview" class="balance-preview">
+                        <p class="text-muted text-center">Click "Generate Preview" to see the proposed schedule</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="auto-balance-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="auto-balance-apply-btn">Apply Balance</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/api.js"></script>
+    <script src="utils/config.js"></script>
+    <script src="utils/validation.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>
