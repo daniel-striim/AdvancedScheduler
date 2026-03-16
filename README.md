@@ -69,10 +69,20 @@ OUTPUT TO SchedulerEvents;
 
 ### Supported Timezones
 
-Use IANA timezone identifiers for the `TimeZone` property:
+The scheduler supports multiple timezone formats:
 
-| Region | Timezone Identifier | UTC Offset |
-|--------|-------------------|------------|
+| Format | Example | Description |
+|--------|---------|-------------|
+| **IANA ID** | `Asia/Kolkata` | **Recommended** - handles DST automatically |
+| **UTC/GMT** | `UTC`, `GMT` | Coordinated Universal Time |
+| **Offset** | `+05:30`, `-08:00` | Fixed UTC offset |
+| **GMT+offset** | `GMT+05:30` | GMT with offset |
+| **UTC+offset** | `UTC+05:30` | UTC with offset (converted internally) |
+
+#### Common Timezones
+
+| Region | IANA Identifier | UTC Offset |
+|--------|-----------------|------------|
 | **UTC** | `UTC` | UTC+0 |
 | **US - Pacific** | `America/Los_Angeles` | UTC-8/-7 (PST/PDT) |
 | **US - Mountain** | `America/Denver` | UTC-7/-6 (MST/MDT) |
@@ -99,10 +109,16 @@ CREATE SOURCE MyScheduler USING Global.AdvancedScheduler (
     TimeZone: 'UTC'
 ) OUTPUT TO SchedulerEvents;
 
--- India Standard Time
+-- India Standard Time (IANA - recommended)
 CREATE SOURCE IndiaScheduler USING Global.AdvancedScheduler (
     Schedules: '[...]',
     TimeZone: 'Asia/Kolkata'
+) OUTPUT TO SchedulerEvents;
+
+-- India Standard Time (UTC offset format)
+CREATE SOURCE IndiaScheduler2 USING Global.AdvancedScheduler (
+    Schedules: '[...]',
+    TimeZone: 'UTC+05:30'
 ) OUTPUT TO SchedulerEvents;
 
 -- US Eastern Time
@@ -112,7 +128,10 @@ CREATE SOURCE EasternScheduler USING Global.AdvancedScheduler (
 ) OUTPUT TO SchedulerEvents;
 ```
 
-**Note:** Use IANA identifiers (e.g., `Asia/Kolkata`) instead of abbreviations (e.g., `IST`) to avoid ambiguity and ensure proper daylight saving time handling.
+**Notes:**
+- Use IANA identifiers (e.g., `Asia/Kolkata`) for automatic daylight saving time handling
+- Abbreviations like `IST` are ambiguous (India/Israel/Ireland) and should be avoided
+- Invalid timezone values fall back to UTC with a warning in the logs
 
 ## JSON Configuration Schema
 
